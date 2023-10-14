@@ -104,20 +104,57 @@ int perguntaQtdPessoas()
     return qtdPessoas;
 }
 
-void imprimeMesasOcupadas(Mesa *vetorMesas, int qtdLinhas, int qtdColunas)
+void imprimeMesasLivres(Mesa *vetorMesas, int qtdLinhas, int qtdColunas)
 {
     for (int i = 0; i < qtdLinhas; i++)
     {
         {
             for (int j = 0; j < qtdColunas; j++)
             {   
-                if(vetorMesas[i*qtdColunas+j].livre = LIV){
+                if(vetorMesas[i*qtdColunas+j].livre == LIV){
                     int numeroMesa = i*qtdColunas+j+1;
                     printf("Mesa %d livre\n", numeroMesa);
                 }
             }
         }
     }
+}
+
+void preencheMesas(Mesa *vetorMesas, int qtdLinhas, int qtdColunas, Grupo *listaSubGrupos)
+{   
+    Grupo *p;
+    int i = 0;
+    int j = 0;
+    for(p = listaSubGrupos; p != NULL; p = p->prox)
+    {
+        if(i >= qtdLinhas){
+            break;      // tratar os subgrupos que sobraram para por na fila
+        }
+
+        vetorMesas[i*qtdColunas+j].livre = OCP;
+        //Excluir nós da lista de subgrupos
+        if(j+1 < qtdColunas)
+        {
+            j++;
+        }else{
+            j = 0;
+            i++;
+        }
+    }
+}
+
+void chegaGrupo(Mesa *vetorMesas, int qtdLinhas, int qtdColunas)
+{
+    int qtdPessoas = perguntaQtdPessoas();
+    Grupo* grupo;   
+    grupo = criaGrupo(qtdPessoas);
+
+    Grupo *listaSubGrupos = NULL;
+    listaSubGrupos = criaSubGrupo(listaSubGrupos, grupo->qtdPessoasGrupo);
+
+    imprimeListaSubgrupos(listaSubGrupos);
+
+    preencheMesas(vetorMesas, qtdLinhas, qtdColunas, listaSubGrupos);
 }
 
 int main ()
@@ -130,15 +167,11 @@ int main ()
     vetorMesas = alocaVetor (qtdMesas);
 
     setaMesasIniciais (vetorMesas, qtdLinhas, qtdColunas);
-    imprimeMesasOcupadas(vetorMesas, qtdLinhas, qtdColunas);
+    imprimeMesasLivres(vetorMesas, qtdLinhas, qtdColunas);
     
-    int qtdPessoas = perguntaQtdPessoas();
-    Grupo* grupo;   
-    grupo = criaGrupo(qtdPessoas);
+    chegaGrupo(vetorMesas, qtdLinhas, qtdColunas);
 
-    Grupo *listaSubGrupos = NULL;
-    listaSubGrupos = criaSubGrupo(listaSubGrupos, grupo->qtdPessoasGrupo);
-
-    imprimeListaSubgrupos(listaSubGrupos);
+    imprimeMesasLivres(vetorMesas, qtdLinhas, qtdColunas);
+    
     
 }
