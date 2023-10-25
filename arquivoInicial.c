@@ -117,10 +117,43 @@ void filaImprime(Fila* f){
         return;
     }
 
+    printf("\nImprimindo Fila de Espera...\n");
     for(q = f->ini; q != NULL; q = q->prox){
-        printf("\nImprimindo Fila de Espera...\n");
         printf("Grupo ID: %d \n", q->identificacao);
     }
+}
+
+void sairDaFila(Fila* f)
+{   
+    int idLocal;
+    Grupo* p = f->ini;
+    Grupo *ant = NULL;
+
+    if(f == NULL){
+        printf("\nFila de Espera vazia\n");
+        return;
+    }
+    filaImprime(f);
+
+    printf ("Digite o Id do grupo que deseja sair da fila: \n");
+    scanf (" %d", &idLocal); 
+
+    while(p != NULL && p->identificacao != idLocal){
+        ant = p;
+        p = p->prox;
+    }
+
+    if(p == NULL){
+        printf("Id nao encontrado.\n");
+        return;
+    }
+
+    if(ant == NULL){
+        f->ini = f->ini->prox;
+    }else{
+        ant->prox = p->prox;        
+    }
+    free(p);
 }
 
 Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila **filaEspera)
@@ -272,9 +305,6 @@ void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas)
     
 }
 
-
-
-
 int main ()
 {
     /* vetor de mesas */
@@ -307,9 +337,6 @@ int main ()
 
     listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, &filaEspera);
 
-    imprimeGrupos (listaGrupos);
+    sairDaFila(filaEspera);
 
-    imprimeMesasLivres (vetorMesas, linhas, colunas);
-
-    filaImprime(filaEspera);
 }
