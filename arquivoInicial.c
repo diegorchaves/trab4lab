@@ -22,6 +22,12 @@ typedef struct grupo
     Mesa *mesaAtribuida;
 } Grupo;
 
+typedef struct fila
+{
+    struct grupo *ini;
+    struct grupo *fim;
+} Fila;
+
 /* funcao que aloca as mesas e retorna o endereco para o vetor de mesas */
 Mesa *alocaMesas (int linhas, int colunas)
 {
@@ -46,6 +52,16 @@ Mesa *alocaMesas (int linhas, int colunas)
     }
 
     return vetor;
+}
+
+Fila *filaInicializa()
+{
+     Fila* p;
+
+     p->ini = NULL;
+     p->fim = NULL;
+
+     return p;
 }
 
 int existeMesaLivre (Mesa *vetor, int linhas, int colunas)
@@ -81,7 +97,72 @@ Mesa *atribuiMesa (Mesa *vetor, int linhas, int colunas)
     return NULL;
 }
 
-Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas)
+void filaInsere (Fila* filaEspera, Grupo *novo)
+{
+    
+    if (filaEspera->fim != NULL){
+        filaEspera->fim->prox = novo;
+    } else{
+        filaEspera->ini = novo;
+    }
+    filaEspera->fim = novo; 
+
+}
+
+void filaImprime(Fila* f){
+    Grupo* q;
+
+    if(f->ini == NULL){
+        printf("\nFila de Espera vazia\n");
+        return;
+    }
+
+    for(q = f->ini; q != NULL; q = q->prox){
+        printf("\nImprimindo Fila de Espera...\n");
+        printf("Grupo ID: %d \n", q->identificacao);
+    }
+}
+
+Grupo *liberarMesa(Grupo *inicioLista)
+{   
+    Grupo *p = inicioLista;
+    Grupo *ant = inicioLista;
+    int comanda = 0;
+
+    if(inicioLista == NULL)
+    {
+        printf("Nao existem mesas ocupadas\n");
+        return inicioLista;
+    }
+
+    printf ("Digite o numero da comanda: \n");
+    scanf (" %d", &comanda);
+    
+    while(p != NULL && p->mesaAtribuida->numeroComanda != comanda){
+        ant = p;
+        p = p->prox;
+    }
+
+    if(p == NULL)
+    {
+        printf("Essa mesa nao esta ocupada\n");     
+    }else if(ant == inicioLista)
+    {
+        p->mesaAtribuida->ocupada = LIV;
+        inicioLista = p->prox;
+        free(p);
+    }else{
+        p->mesaAtribuida->ocupada = LIV;
+        ant->prox = p->prox;        
+        free(p);
+    }
+
+    // AQUI PRECISA AJEITAR QUEM ESTA FILA
+    return inicioLista;
+
+}
+
+Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas, Fila **filaEspera)
 {
     int idGrupo;
 
@@ -126,12 +207,13 @@ Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, i
     if (novo->mesaAtribuida == NULL)
     {
         /* aqui adicionar o grupo na fila de espera */
+        filaInsere(*filaEspera, novo);
     }
 
     return inicioLista;
 }
 
-void addGrupo (Grupo **inicioLista, Mesa *vetor, int linhas, int colunas)
+void addGrupo (Grupo **inicioLista, Mesa *vetor, int linhas, int colunas, Fila **filaEspera)
 {
     int quantidadeMembros;
     printf ("Digite a quantidade de membros do grupo: ");
@@ -139,17 +221,18 @@ void addGrupo (Grupo **inicioLista, Mesa *vetor, int linhas, int colunas)
 
     while (quantidadeMembros > 4)
     {
-        *inicioLista = alocaNovoGrupo (*inicioLista, quantidadeMembros, vetor, linhas, colunas);
+        *inicioLista = alocaNovoGrupo (*inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera);
         quantidadeMembros -= 4;
     }
 
-    *inicioLista = alocaNovoGrupo (*inicioLista, quantidadeMembros, vetor, linhas, colunas);
+    *inicioLista = alocaNovoGrupo (*inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera);
 
 }
 
 void imprimeGrupos (Grupo *inicioLista)
 {
     Grupo *p;
+    printf("\nImprimindo Grupos...\n");
     for (p = inicioLista; p != NULL; p = p->prox)
     {
         printf ("Quantidade de membros: %d\t", p->quantidadeMembros);
@@ -158,7 +241,13 @@ void imprimeGrupos (Grupo *inicioLista)
 }
 
 void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas)
-{
+{   
+    printf("\nImprimindo Mesas Livres...\n");
+    if(!existeMesaLivre(vetor, linhas, colunas)){
+        printf("Nenhuma mesa livre\n");
+        return;
+    }
+
     for (int i = 0; i < linhas; i++)
     {
         for (int j = 0; j < colunas; j++)
@@ -169,7 +258,11 @@ void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas)
             }
         }
     }
+    
 }
+
+
+
 
 int main ()
 {
@@ -180,7 +273,7 @@ int main ()
     Grupo *listaGrupos = NULL;
 
     /* fila de espera */
-    Grupo *filaEspera = NULL;
+    Fila *filaEspera = filaInicializa();
 
     /* perguntar ao usuario quantas linhas e colunas de mesas existem */
     int linhas, colunas;
@@ -193,10 +286,17 @@ int main ()
     vetorMesas = alocaMesas (linhas, colunas);
 
     /* incluir um novo grupo */
-    addGrupo (&listaGrupos, vetorMesas, linhas, colunas);
+    addGrupo (&listaGrupos, vetorMesas, linhas, colunas, &filaEspera);
 
     imprimeGrupos (listaGrupos);
 
     imprimeMesasLivres (vetorMesas, linhas, colunas);
 
+    filaImprime(filaEspera);
+
+    listaGrupos = liberarMesa(listaGrupos);
+
+    imprimeGrupos (listaGrupos);
+
+    imprimeMesasLivres (vetorMesas, linhas, colunas);
 }
