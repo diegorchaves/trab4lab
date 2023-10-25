@@ -56,8 +56,7 @@ Mesa *alocaMesas (int linhas, int colunas)
 
 Fila *filaInicializa()
 {
-     Fila* p;
-
+     Fila* p = (Fila*)malloc(sizeof(Fila));
      p->ini = NULL;
      p->fim = NULL;
 
