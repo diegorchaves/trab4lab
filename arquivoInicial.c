@@ -171,12 +171,12 @@ Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fil
     printf ("Digite o numero da comanda: \n");
     scanf (" %d", &comanda);
     
-    while(p != NULL && p->mesaAtribuida->numeroComanda != comanda){
+    while(p != NULL && p->mesaAtribuida != NULL && p->mesaAtribuida->numeroComanda != comanda){
         ant = p;
         p = p->prox;
     }
 
-    if(p == NULL)
+    if(p == NULL || p->mesaAtribuida == NULL)
     {
         printf("Essa mesa nao esta ocupada\n");
         return inicioLista;     
