@@ -123,10 +123,10 @@ void filaImprime(Fila* f){
     }
 }
 
-Grupo *liberarMesa(Grupo *inicioLista)
+Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila **filaEspera)
 {   
     Grupo *p = inicioLista;
-    Grupo *ant = inicioLista;
+    Grupo *ant = NULL;
     int comanda = 0;
 
     if(inicioLista == NULL)
@@ -145,19 +145,30 @@ Grupo *liberarMesa(Grupo *inicioLista)
 
     if(p == NULL)
     {
-        printf("Essa mesa nao esta ocupada\n");     
-    }else if(ant == inicioLista)
+        printf("Essa mesa nao esta ocupada\n");
+        return inicioLista;     
+    }
+    
+    if(ant == NULL)
     {
-        p->mesaAtribuida->ocupada = LIV;
         inicioLista = p->prox;
-        free(p);
     }else{
-        p->mesaAtribuida->ocupada = LIV;
         ant->prox = p->prox;        
-        free(p);
     }
 
-    // AQUI PRECISA AJEITAR QUEM ESTA FILA
+    
+    // SE HOUVER ALGUEM NA FILA ATRIBUI MESA
+    Fila *f = *filaEspera;
+
+    if(f->ini != NULL){
+        
+        f->ini->mesaAtribuida = p->mesaAtribuida;
+        f->ini = f->ini->prox;
+    
+    }else{
+        p->mesaAtribuida->ocupada = LIV;
+    }
+    free(p);
     return inicioLista;
 
 }
@@ -294,9 +305,11 @@ int main ()
 
     filaImprime(filaEspera);
 
-    listaGrupos = liberarMesa(listaGrupos);
+    listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, &filaEspera);
 
     imprimeGrupos (listaGrupos);
 
     imprimeMesasLivres (vetorMesas, linhas, colunas);
+
+    filaImprime(filaEspera);
 }
