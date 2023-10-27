@@ -100,7 +100,7 @@ Mesa *alocaMesas (int linhas, int colunas, Pilha *pilha)
     return vetor;
 }
 
-Pilha* pratoInicializa(Pilha* pilhaPratos, int linhas, int colunas)
+Pilha* pratoInicializa(Pilha *pilhaPratos, int linhas, int colunas)
 {
     int quantidadePratos = linhas * colunas * 4;
 
@@ -251,9 +251,9 @@ void sairDaFila(Fila* f)
     free(p);
 }
 
-void puxaDaFila (Fila **filaEspera, Grupo* p, Pilha *pilha, Mesa *vetor, int linhas, int colunas)
+void puxaDaFila (Fila *filaEspera, Grupo* p, Pilha *pilha, Mesa *vetor, int linhas, int colunas)
 {
-    Fila *f = *filaEspera;
+    Fila *f = filaEspera;
     int quantidadeSaindo = p->mesaAtribuida->quantidadeSentada;
 
     if(f->ini != NULL)  /* fila nao esta vazia */
@@ -275,7 +275,7 @@ void puxaDaFila (Fila **filaEspera, Grupo* p, Pilha *pilha, Mesa *vetor, int lin
     }
 }
 
-Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila **filaEspera, Pilha *pilha)
+Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha)
 {   
     Grupo *p = inicioLista;
     Grupo *ant = NULL;
@@ -318,7 +318,7 @@ Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fil
     return inicioLista;
 }
 
-Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas, Fila **filaEspera, Pilha *pilha)
+Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha)
 {
     int idGrupo;
 
@@ -362,13 +362,13 @@ Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, i
     if (novo->mesaAtribuida == NULL)
     {
         /* aqui adicionar o grupo na fila de espera */
-        filaInsere(*filaEspera, novo);
+        filaInsere(filaEspera, novo);
     }
 
     return inicioLista;
 }
 
-void addGrupo (Grupo **inicioLista, Mesa *vetor, int linhas, int colunas, Fila **filaEspera, Pilha *pilha)
+void addGrupo (Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha)
 {
     int quantidadeMembros;
     printf ("Digite a quantidade de membros do grupo: ");
@@ -376,11 +376,11 @@ void addGrupo (Grupo **inicioLista, Mesa *vetor, int linhas, int colunas, Fila *
 
     while (quantidadeMembros > 4)
     {
-        *inicioLista = alocaNovoGrupo (*inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera, pilha);
+        inicioLista = alocaNovoGrupo (inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera, pilha);
         quantidadeMembros -= 4;
     }
 
-    *inicioLista = alocaNovoGrupo (*inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera, pilha);
+    inicioLista = alocaNovoGrupo (inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera, pilha);
 
 }
 
@@ -464,32 +464,33 @@ Pilha *initPilha ()
     return new;
 }
 
-void menu (Grupo **listaGrupos, Mesa *vetorMesas, int linhas, int colunas, Fila **filaEspera, Pilha *pilhaPratos)
+void menu (Grupo *listaGrupos, Mesa *vetorMesas, int linhas, int colunas, Fila *filaEspera, Pilha **pilhaPratos)
 {
     while (1)
     {
         int opcao;
+        printf ("1) Chegar grupo\n2) Liberar mesa\n3) Sair da fila\n4) Imprimir pratos\n5) Imprimir fila\n6) Repor pratos\n7) Imprimir todas mesas\n8) Imprimir uma mesa\n9) Sair\n");
         printf ("Digite a opcao desejada: ");
         scanf ("%d", &opcao);
         switch (opcao)
         {
             case 1:
-                addGrupo (listaGrupos, vetorMesas, linhas, colunas, filaEspera, pilhaPratos);
+                addGrupo (listaGrupos, vetorMesas, linhas, colunas, filaEspera, *pilhaPratos);
                 break;
             case 2:
-                listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPratos);
+                listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, filaEspera, *pilhaPratos);
                 break;
             case 3:
                 sairDaFila(filaEspera);
                 break;
             case 4:
-                contaPratos(pilhaPratos);
+                contaPratos(*pilhaPratos);
                 break;
             case 5:
                 filaImprime(filaEspera);
                 break;
             case 6:
-                reporPratos (pilhaPratos);
+                reporPratos (*pilhaPratos);
                 break;
             case 7:
                 imprimeMesasTodas (vetorMesas, linhas, colunas);
@@ -530,7 +531,7 @@ int main ()
     /* alocar dinamicamente as mesas */
     vetorMesas = alocaMesas (linhas, colunas, pilhaPratos);
 
-    menu (&listaGrupos, vetorMesas, linhas, colunas, &filaEspera, &pilhaPratos);
+    menu (listaGrupos, vetorMesas, linhas, colunas, filaEspera, &pilhaPratos);
 
     /* contaPratos(pilhaPratos);
     addGrupo (&listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPratos);
