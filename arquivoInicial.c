@@ -29,13 +29,13 @@ typedef struct prato
 
 typedef struct fila
 {
-    struct grupo *ini;
-    struct grupo *fim;
+    Grupo *ini;
+    Grupo *fim;
 } Fila;
 
 typedef struct pilha
 {
-    struct prato *prim;
+    Prato *prim;
 } Pilha;
 
 void push (Pilha *pilha)
@@ -57,6 +57,17 @@ void pop (Pilha *pilha)
     {
         pilha->prim = p->prox;
         free (p);
+    }
+}
+
+void reporPratos (Pilha *pilha)
+{
+    int quantidadeLocal;
+    printf ("Digite quantos pratos deseja repor: ");
+    scanf ("%d", &quantidadeLocal);
+    for (int i = 0; i < quantidadeLocal; i++)
+    {
+        push (pilha);
     }
 }
 
@@ -89,15 +100,15 @@ Mesa *alocaMesas (int linhas, int colunas, Pilha *pilha)
     return vetor;
 }
 
-Pilha* pratoInicializa(Pilha* pilhaPrato, int linhas, int colunas)
+Pilha* pratoInicializa(Pilha* pilhaPratos, int linhas, int colunas)
 {
     int quantidadePratos = linhas * colunas * 4;
 
     for(int i = 0; i < quantidadePratos; i++){
-        push(pilhaPrato);
+        push(pilhaPratos);
     }
 
-    return pilhaPrato;
+    return pilhaPratos;
 }
 
 void contaPratos (Pilha *pil)
@@ -111,21 +122,13 @@ void contaPratos (Pilha *pil)
     printf ("Existem %d pratos na pilha.\n", contador);
 }
 
-Pilha* pilhaInicializa()
-{
-    Pilha *p = (Pilha*)malloc(sizeof(Pilha));
-    p->prim = NULL;
-
-    return p;
-}
-
 Fila *filaInicializa()
 {
-     Fila* f = (Fila*)malloc(sizeof(Fila));
-     f->ini = NULL;
-     f->fim = NULL;
+    Fila* f = (Fila*)malloc(sizeof(Fila));
+    f->ini = NULL;
+    f->fim = NULL;
 
-     return f;
+    return f;
 }
 
 int existeMesaLivre (Mesa *vetor, int linhas, int colunas)
@@ -153,7 +156,7 @@ void retiraPratosExcedentes (Pilha *pilha, int quantidadeMembros)
     }
 }
 
-void ColocaPratosFaltam (Pilha *pilha, int quantidadeMembros)
+void colocaPratosFaltam (Pilha *pilha, int quantidadeMembros)
 {
     int quantidadeAlterar = 4 - quantidadeMembros;
 
@@ -197,6 +200,7 @@ void filaInsere (Fila* filaEspera, Grupo *novo)
 
 void filaImprime(Fila* f){
     Grupo* q;
+    int posicao = 1, totalNaFila = 0;
 
     if(f->ini == NULL){
         printf("\nFila de Espera vazia\n");
@@ -205,8 +209,11 @@ void filaImprime(Fila* f){
 
     printf("\nImprimindo Fila de Espera...\n");
     for(q = f->ini; q != NULL; q = q->prox){
-        printf("Grupo ID: %d \n", q->identificacao);
+        printf("Grupo ID: %d\tPosicao: %d\tQtd pessoas: %d\n", q->identificacao, posicao, q->quantidadeMembros);
+        posicao++;
+        totalNaFila += q->quantidadeMembros;
     }
+    printf ("Existem %d pessoas na fila.\n", totalNaFila);
 }
 
 void sairDaFila(Fila* f)
@@ -215,14 +222,15 @@ void sairDaFila(Fila* f)
     Grupo* p = f->ini;
     Grupo *ant = NULL;
 
-    if(f == NULL){
+    if(f == NULL)
+    {
         printf("\nFila de Espera vazia\n");
         return;
     }
     filaImprime(f);
 
     printf ("Digite o Id do grupo que deseja sair da fila: \n");
-    scanf (" %d", &idLocal); 
+    scanf ("%d", &idLocal); 
 
     while(p != NULL && p->identificacao != idLocal){
         ant = p;
@@ -239,25 +247,51 @@ void sairDaFila(Fila* f)
     }else{
         ant->prox = p->prox;        
     }
+    printf ("O grupo com Id %d saiu da fila.\n", p->identificacao);
     free(p);
+}
+
+void puxaDaFila (Fila **filaEspera, Grupo* p, Pilha *pilha, Mesa *vetor, int linhas, int colunas)
+{
+    Fila *f = *filaEspera;
+    int quantidadeSaindo = p->mesaAtribuida->quantidadeSentada;
+
+    if(f->ini != NULL)  /* fila nao esta vazia */
+    {
+        int quantidadeEntrando = f->ini->quantidadeMembros;
+
+        colocaPratosFaltam(pilha, quantidadeSaindo);
+        p->mesaAtribuida->ocupada = LIV;
+
+        f->ini->mesaAtribuida = atribuiMesa(vetor, linhas, colunas, quantidadeEntrando, pilha);
+
+        f->ini = f->ini->prox;
+    
+    }
+    else    /* fila esta vazia */
+    {
+        colocaPratosFaltam(pilha, quantidadeSaindo);
+        p->mesaAtribuida->ocupada = LIV;
+    }
 }
 
 Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila **filaEspera, Pilha *pilha)
 {   
     Grupo *p = inicioLista;
     Grupo *ant = NULL;
-    int comanda = 0;
+    int comanda;
 
-    if(inicioLista == NULL)
+    if(p == NULL)
     {
         printf("Nao existem mesas ocupadas\n");
         return inicioLista;
     }
 
     printf ("Digite o numero da comanda: \n");
-    scanf (" %d", &comanda);
+    scanf ("%d", &comanda);
     
-    while(p != NULL && p->mesaAtribuida != NULL && p->mesaAtribuida->numeroComanda != comanda){
+    while(p != NULL && p->mesaAtribuida != NULL && p->mesaAtribuida->numeroComanda != comanda)
+    {
         ant = p;
         p = p->prox;
     }
@@ -265,38 +299,23 @@ Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fil
     if(p == NULL || p->mesaAtribuida == NULL)
     {
         printf("Essa mesa nao esta ocupada\n");
-        return inicioLista;     
+        return inicioLista;
     }
     
     if(ant == NULL)
     {
         inicioLista = p->prox;
-    }else{
+    }
+    else
+    {
         ant->prox = p->prox;        
     }
 
+    puxaDaFila (filaEspera, p, pilha, vetor, linhas, colunas);
     
-    // SE HOUVER ALGUEM NA FILA ATRIBUI MESA
-    Fila *f = *filaEspera;
-    int quantidadeSaindo = p->mesaAtribuida->quantidadeSentada;
-
-    if(f->ini != NULL){
-        int quantidadeEntrando = f->ini->quantidadeMembros;
-
-        ColocaPratosFaltam(pilha, quantidadeSaindo);
-        p->mesaAtribuida->ocupada = LIV;
-
-        f->ini->mesaAtribuida = atribuiMesa(vetor, linhas, colunas, quantidadeEntrando, pilha);
-
-        f->ini = f->ini->prox;
-    
-    }else{
-        ColocaPratosFaltam(pilha, quantidadeSaindo);
-        p->mesaAtribuida->ocupada = LIV;
-    }
     free(p);
+    
     return inicioLista;
-
 }
 
 Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas, Fila **filaEspera, Pilha *pilha)
@@ -322,11 +341,11 @@ Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, i
     }
     novo->prox = NULL;
 
-    /* incluindo na fila */
+    /* incluindo na lista */
     if (inicioLista == NULL)
     {
         inicioLista = novo;
-        idGrupo = 0;
+        novo->identificacao = 0;
     }
     else
     {
@@ -335,11 +354,10 @@ Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, i
         {
             p = p->prox;
         }
-        idGrupo = p->identificacao + 1;
+        novo->identificacao = p->identificacao + 1;
         p->prox = novo;
     }
 
-    novo->identificacao = idGrupo;
     novo->mesaAtribuida = atribuiMesa (vetor, linhas, colunas, novo->quantidadeMembros, pilha);
     if (novo->mesaAtribuida == NULL)
     {
@@ -377,6 +395,42 @@ void imprimeGrupos (Grupo *inicioLista)
     }
 }
 
+void imprimeMesaEspecifica (Mesa *vetor, int linhas, int colunas)
+{
+    int numeroLocal;
+    printf ("Digite o numero da mesa: ");
+    scanf ("%d", &numeroLocal);
+
+    for (int i = 0; i < linhas; i++)
+    {
+        for (int j = 0; j < colunas; j++)
+        {
+            if (vetor [i * colunas + j].numero == numeroLocal)
+            {
+                printf ("Mesa %d tem %d sentados.\n", vetor [i * colunas + j].numero, vetor [i * colunas + j].quantidadeSentada);
+                return;
+            }
+        }
+    }
+    printf ("Mesa de numero %d nao encontrada.\n", numeroLocal);
+}
+
+void imprimeMesasTodas (Mesa *vetor, int linhas, int colunas)
+{
+    printf("\nImprimindo mesas...\n");
+
+    for (int i = 0; i < linhas; i++)
+    {
+        for (int j = 0; j < colunas; j++)
+        {
+            if (vetor [i * colunas + j].ocupada == OCP)
+            {
+                printf ("Mesa %d tem %d sentados.\n", vetor [i * colunas + j].numero, vetor [i * colunas + j].quantidadeSentada);
+            }
+        }
+    }
+}
+
 void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas)
 {   
     printf("\nImprimindo Mesas Livres...\n");
@@ -398,6 +452,57 @@ void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas)
     
 }
 
+Pilha *initPilha ()
+{
+    Pilha *new = (Pilha*)malloc(sizeof(Pilha));
+    if (new == NULL)
+    {
+        printf ("Falha ao alocar.\n");
+        exit (1);
+    }
+    new->prim = NULL;
+    return new;
+}
+
+void menu (Grupo **listaGrupos, Mesa *vetorMesas, int linhas, int colunas, Fila **filaEspera, Pilha *pilhaPratos)
+{
+    while (1)
+    {
+        int opcao;
+        printf ("Digite a opcao desejada: ");
+        scanf ("%d", &opcao);
+        switch (opcao)
+        {
+            case 1:
+                addGrupo (listaGrupos, vetorMesas, linhas, colunas, filaEspera, pilhaPratos);
+                break;
+            case 2:
+                listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPratos);
+                break;
+            case 3:
+                sairDaFila(filaEspera);
+                break;
+            case 4:
+                contaPratos(pilhaPratos);
+                break;
+            case 5:
+                filaImprime(filaEspera);
+                break;
+            case 6:
+                reporPratos (pilhaPratos);
+                break;
+            case 7:
+                imprimeMesasTodas (vetorMesas, linhas, colunas);
+                break;
+            case 8:
+                imprimeMesaEspecifica (vetorMesas, linhas, colunas);
+                break;
+            case 9:
+                exit (1);
+        }
+    }
+}
+
 int main ()
 {
     /* vetor de mesas */
@@ -406,14 +511,11 @@ int main ()
     /* lista que guarda os grupos */
     Grupo *listaGrupos = NULL;
 
-    /* lista que guarda pratos */
-    Prato *listaPratos = NULL;
+    /* pilha que guarda pratos */
+    Pilha *pilhaPratos = initPilha ();
 
     /* fila de espera */
     Fila *filaEspera = filaInicializa();
-
-    /* pilha de pratos*/
-    Pilha *pilhaPrato = pilhaInicializa();
 
     /* perguntar ao usuario quantas linhas e colunas de mesas existem */
     int linhas, colunas;
@@ -422,25 +524,20 @@ int main ()
     printf ("Informe o numero de colunas: ");
     scanf ("%d", &colunas);
 
-    /* preencher lista de pratos*/
-    pilhaPrato = pratoInicializa(pilhaPrato, linhas, colunas);
-
-    contaPratos(pilhaPrato);
+    /* preencher fila de pratos*/
+    pilhaPratos = pratoInicializa(pilhaPratos, linhas, colunas);
 
     /* alocar dinamicamente as mesas */
-    vetorMesas = alocaMesas (linhas, colunas, pilhaPrato);
+    vetorMesas = alocaMesas (linhas, colunas, pilhaPratos);
 
-    /* incluir um novo grupo */
-    addGrupo (&listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPrato);
+    menu (&listaGrupos, vetorMesas, linhas, colunas, &filaEspera, &pilhaPratos);
 
+    /* contaPratos(pilhaPratos);
+    addGrupo (&listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPratos);
     imprimeGrupos (listaGrupos);
-
     imprimeMesasLivres (vetorMesas, linhas, colunas);
-
     filaImprime(filaEspera);
-
-    listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPrato);
-
-    sairDaFila(filaEspera);
+    listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, &filaEspera, pilhaPratos);
+    sairDaFila(filaEspera); */
 
 }
