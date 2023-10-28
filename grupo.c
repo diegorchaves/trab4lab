@@ -1,122 +1,257 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include "pilha.h"
 #include "mesa.h"
 #include "grupo.h"
-#define OCP 0
-#define LIV 1
+#define LIV 0
+#define OCP 1
 
-Grupo* criaGrupo(int qtdPessoas)
+Fila *filaInicializa()
 {
-    Grupo* novo = (Grupo*)malloc(sizeof(Grupo));
+    Fila* f = (Fila*)malloc(sizeof(Fila));
+    f->ini = NULL;
+    f->fim = NULL;
 
-    novo->qtdPessoasGrupo = qtdPessoas;
-    novo->idGrupo = 0;
-    novo->prox = NULL;
-
-    return novo;
+    return f;
 }
 
-Grupo *criaSubGrupo(Grupo *listaGrupos, int qtdPessoas)
+void filaInsere (Fila* filaEspera, Grupo *novo)
 {
-    Grupo *novo = (Grupo*)malloc(sizeof(Grupo));
     
+    if (filaEspera->fim != NULL){
+        filaEspera->fim->prox = novo;
+    } else{
+        filaEspera->ini = novo;
+    }
+    filaEspera->fim = novo; 
 
-    if(qtdPessoas <= 4)
-    {   
-        if(listaGrupos == NULL)
+}
+
+void filaImprime(Fila* f)
+{
+    Grupo* q;
+    int posicao = 1, totalNaFila = 0;
+
+    if(f->ini == NULL){
+        printf("\nFila de Espera vazia\n");
+        return;
+    }
+
+    printf("\nImprimindo Fila de Espera...\n");
+    for(q = f->ini; q != NULL; q = q->prox){
+        printf("Grupo ID: %d\tPosicao: %d\tQtd pessoas: %d\n", q->identificacao, posicao, q->quantidadeMembros);
+        posicao++;
+        totalNaFila += q->quantidadeMembros;
+    }
+    printf ("Existem %d pessoas na fila.\n", totalNaFila);
+}
+
+Fila *sairDaFila(Fila* f, Grupo *listaGrupos)
+{   
+    int idLocal;
+    Grupo* p = f->ini;
+    Grupo *ant = NULL;
+
+    if(f->ini == NULL)
+    {
+        printf("\nFila de Espera vazia\n");
+        return f;
+    }
+    filaImprime(f);
+
+    printf ("Digite o Id do grupo que deseja sair da fila: \n");
+    scanf ("%d", &idLocal); 
+
+    while(p != NULL && p->identificacao != idLocal){
+        ant = p;
+        p = p->prox;
+    }
+
+    if(p == NULL){
+        printf("Id nao encontrado.\n");
+        return f;
+    }
+
+    if(ant == NULL){
+        f->ini = f->ini->prox;
+        Grupo *anteriorFini = listaGrupos;
+        while (anteriorFini->prox != NULL && anteriorFini->prox != p)
         {
-            novo->qtdPessoasGrupo = qtdPessoas;
-            novo->idGrupo = 0;
-            novo->prox = NULL;
-            
-            return novo;
+            anteriorFini = anteriorFini->prox;
         }
-
-        Grupo *p;
-        for(p = listaGrupos; p->prox != NULL; p = p->prox)
-        {}
-
-        novo->qtdPessoasGrupo = qtdPessoas;
-        novo->idGrupo = 0;
-        novo->prox = NULL;
-        p->prox = novo;
-
-        return listaGrupos;
-        
+        anteriorFini->prox = NULL;
     }else{
-        novo->qtdPessoasGrupo = 4;
-        novo->idGrupo = 0;
-        novo->prox = listaGrupos;
-
-        novo = criaSubGrupo(novo, qtdPessoas - 4);
+        ant->prox = p->prox;        
     }
 
-    return novo;
-}
-
-void imprimeListaSubgrupos(Grupo *listaGrupos)
-{
-    Grupo *p;
-    int i = 1;
-
-    for(p = listaGrupos; p != NULL; p = p->prox){
-        printf("Grupo: %d, qtdPessoas: %d \n", i, p->qtdPessoasGrupo);
-        i++;
-    }
-}
-
-int perguntaQtdPessoas()
-{   
-    int qtdPessoas;
-    printf ("Informe a quantidade de pessoas do grupo: ");
-    scanf ("%d", &qtdPessoas);
-
-    return qtdPessoas;
-}
-
-void enfileirarSubgrupos(Grupo *p, Grupo* fila)
-{
-    Grupo *temp = fila;
-    while (temp->prox != NULL)
+    if(f->ini == NULL)
     {
-        temp = temp->prox;
-    }
-    temp->prox = p;
-}
-
-void preencheMesas(Mesa *vetorMesas, int qtdLinhas, int qtdColunas, Grupo *listaSubGrupos, Grupo *fila)
-{   
-    Grupo *p = listaSubGrupos;
-    int i = 0;
-    while(p != NULL)
-    {
-        if(i > qtdLinhas*qtdColunas){
-            break;                  // tratar os subgrupos que sobraram para por na fila
+        f->fim = NULL;
+        Grupo *ultimoGrupo = listaGrupos;
+        while (ultimoGrupo->prox != NULL)
+        {
+            ultimoGrupo = ultimoGrupo->prox;
         }
+        ultimoGrupo->prox = NULL;
+    }
 
-        if(vetorMesas[i].livre == LIV){
-            vetorMesas[i].livre = OCP;
+    printf ("O grupo com Id %d saiu da fila.\n", p->identificacao);
+    free(p);
+    
+    return f;
+}
+
+Fila *puxaDaFila (Fila *filaEspera, Grupo* p, Pilha *pilha, Mesa *vetor, int linhas, int colunas)
+{
+    Fila *f = filaEspera;
+    int quantidadeSaindo = p->mesaAtribuida->quantidadeSentada;
+
+    if(f->ini != NULL)  /* fila nao esta vazia */
+    {
+        int quantidadeEntrando = f->ini->quantidadeMembros;
+
+        colocaPratosFaltam(pilha, quantidadeSaindo);
+        p->mesaAtribuida->ocupada = LIV;
+
+        f->ini->mesaAtribuida = atribuiMesa(vetor, linhas, colunas, quantidadeEntrando, pilha);
+
+        f->ini = f->ini->prox;
+        if(f->ini == NULL)
+        {
+            f->fim = NULL;
+        }
+    
+    }
+    else    /* fila esta vazia */
+    {
+        colocaPratosFaltam(pilha, quantidadeSaindo);
+        p->mesaAtribuida->quantidadeSentada = 0;
+        p->mesaAtribuida->ocupada = LIV;
+    }
+    
+    return f;
+}
+
+Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha)
+{   
+    Grupo *p = inicioLista;
+    Grupo *ant = NULL;
+    int numero;
+
+    if(p == NULL)
+    {
+        printf("Nao existem mesas ocupadas\n");
+        return inicioLista;
+    }
+
+    imprimeMesasTodas(vetor, linhas, colunas);
+
+    printf ("Digite o numero da mesa: \n");
+    scanf ("%d", &numero);
+    
+    while(p != NULL && p->mesaAtribuida != NULL && p->mesaAtribuida->numero != numero)
+    {
+        ant = p;
+        p = p->prox;
+    }
+
+    if(p == NULL || p->mesaAtribuida == NULL)
+    {
+        printf("Essa mesa nao esta ocupada\n");
+        return inicioLista;
+    }
+    
+    if(ant == NULL)
+    {
+        inicioLista = p->prox;
+    }
+    else
+    {
+        ant->prox = p->prox;        
+    }
+
+    filaEspera = puxaDaFila (filaEspera, p, pilha, vetor, linhas, colunas);
+    
+    free(p);
+    
+    return inicioLista;
+}
+
+Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha)
+{
+    /* alocando o grupo */
+    Grupo *novo = (Grupo*)malloc(sizeof(Grupo));
+    if (novo == NULL)
+    {
+        printf ("Falha de alocacao. O programa sera encerrado.\n");
+        exit (1);
+    }
+    
+    /* setando as informacoes do novo grupo */
+    if (quantidadeMembros > 4)
+    {
+        novo->quantidadeMembros = 4;
+    }
+    else
+    {
+        novo->quantidadeMembros = quantidadeMembros;
+    }
+    novo->prox = NULL;
+    
+    /* incluindo na lista */ 
+    if (inicioLista == NULL)
+    {
+        inicioLista = novo;
+        novo->identificacao = 0;
+    }
+    else
+    {   
+        Grupo *p = inicioLista;
+        while (p->prox != NULL)
+        {
             p = p->prox;
         }
+        novo->identificacao = p->identificacao + 1;
+        p->prox = novo;
         
-        i++;
+    }  
+
+    novo->mesaAtribuida = atribuiMesa (vetor, linhas, colunas, novo->quantidadeMembros, pilha);
+    
+    if (novo->mesaAtribuida == NULL)
+    {
+        /* aqui adicionar o grupo na fila de espera */
+        filaInsere(filaEspera, novo);
     }
 
-    enfileirarSubgrupos(p, fila);
+    return inicioLista;
 }
 
-void chegaGrupo(Mesa *vetorMesas, Grupo *fila, int qtdLinhas, int qtdColunas)
+Grupo *addGrupo (Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha)
 {
-    int qtdPessoas = perguntaQtdPessoas();
+    int quantidadeMembros;
+    printf ("Digite a quantidade de membros do grupo: ");
+    scanf ("%d", &quantidadeMembros);
 
-    Grupo* grupo;   
-    grupo = criaGrupo(qtdPessoas);
+    while (quantidadeMembros > 4)
+    {
+        inicioLista = alocaNovoGrupo (inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera, pilha);
+        quantidadeMembros -= 4;
+    }
+    
+    inicioLista = alocaNovoGrupo (inicioLista, quantidadeMembros, vetor, linhas, colunas, filaEspera, pilha);
 
-    Grupo *listaSubGrupos = NULL;
-    listaSubGrupos = criaSubGrupo(listaSubGrupos, grupo->qtdPessoasGrupo);
+    return inicioLista;
 
-    imprimeListaSubgrupos(listaSubGrupos);
-
-    preencheMesas(vetorMesas, qtdLinhas, qtdColunas, listaSubGrupos, fila);
 }
 
+void imprimeGrupos (Grupo *inicioLista)
+{
+    Grupo *p;
+    printf("\nImprimindo Grupos...\n");
+    for (p = inicioLista; p != NULL; p = p->prox)
+    {
+        printf ("Quantidade de membros: %d\t", p->quantidadeMembros);
+        printf ("ID: %d\n", p->identificacao);
+    }
+}

@@ -1,16 +1,22 @@
-#include <stdlib.h>
+#include <stdio.h>
 
 typedef struct mesa
 {
-    int numeroMesa;
-    int livre;
-    int qtdPessoasSentadas;
+    int numero;
+    int ocupada;
+    int quantidadeSentada;
     int numeroComanda;
 } Mesa;
 
 
-Mesa *alocaVetor (int qtdMesas);
+Mesa *alocaMesas (int linhas, int colunas, Pilha *pilha);
 
-void setaMesasIniciais (Mesa *vetorMesas, int qtdLinhas, int qtdColunas);
+int existeMesaLivre (Mesa *vetor, int linhas, int colunas);
 
-void imprimeMesasLivres(Mesa *vetorMesas, int qtdLinhas, int qtdColunas);
+Mesa *atribuiMesa (Mesa *vetor, int linhas, int colunas, int quantidadeMembros, Pilha *pilha);
+
+void imprimeMesasTodas (Mesa *vetor, int linhas, int colunas);
+
+void imprimeMesaEspecifica (Mesa *vetor, int linhas, int colunas);
+
+void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas);

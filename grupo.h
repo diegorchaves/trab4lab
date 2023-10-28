@@ -1,21 +1,32 @@
 typedef struct grupo
 {
-    int qtdPessoasGrupo;
-    int idGrupo;
+    int quantidadeMembros;
+    int identificacao;
     struct grupo *prox;
+    Mesa *mesaAtribuida;
 } Grupo;
 
 
-Grupo* criaGrupo(int qtdPessoas);
+typedef struct fila
+{
+    Grupo *ini;
+    Grupo *fim;
+} Fila;
 
-Grupo *criaSubGrupo(Grupo *listaGrupos, int qtdPessoas);
+Fila *filaInicializa();
 
-void imprimeListaSubgrupos(Grupo *listaGrupos);
+void filaInsere (Fila* filaEspera, Grupo *novo);
 
-int perguntaQtdPessoas();
+void filaImprime(Fila* f);
 
-void enfileirarSubgrupos(Grupo *p, Grupo* fila);
+Fila *sairDaFila(Fila* f, Grupo *listaGrupos);
 
-void chegaGrupo(Mesa *vetorMesas, Grupo *fila, int qtdLinhas, int qtdColunas);
+Fila *puxaDaFila (Fila *filaEspera, Grupo* p, Pilha *pilha, Mesa *vetor, int linhas, int colunas);
 
-void preencheMesas(Mesa *vetorMesas, int qtdLinhas, int qtdColunas, Grupo *listaSubGrupos, Grupo *fila);
+Grupo *liberarMesa(Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha);
+
+Grupo *alocaNovoGrupo (Grupo *inicioLista, int quantidadeMembros, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha);
+
+Grupo *addGrupo (Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila *filaEspera, Pilha *pilha);
+
+void imprimeGrupos (Grupo *inicioLista);
