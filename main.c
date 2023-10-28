@@ -1,100 +1,77 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pilha.h"
 #include "mesa.h"
 #include "grupo.h"
-#define OCP 0
-#define LIV 1
 
 
-void menu ()
+void menu (Grupo *listaGrupos, Mesa *vetorMesas, int linhas, int colunas, Fila *filaEspera, Pilha **pilhaPratos)
 {
-    printf("+-----------------------------+-");
-    printf("------------------------------------+\n");
-    printf("|1 - Chegar grupo             | ");
-    printf("6 - Imprimir pilha de pratos        |\n");
-    printf("|2 - Liberar mesa             | ");
-    printf("7 - Imprimir fila de espera         |\n");
-    printf("|3 - Sair da fila             | ");
-    printf("8 - Imprimir ocupacao               |\n");
-    printf("|4 - Arrumar mesa             | ");
-    printf("9 - Sair                            |\n");
-    printf("|5 - Repor pratos             | ");
-    printf("                                    |\n");
-    printf("+-----------------------------+-");
-    printf("------------------------------------+\n");
-}
-
-void leOpcaoMenu (int index, Mesa* vetorMesas, int qtdLinhas, int qtdColunas, Grupo *fila)
-{
-
-    switch (index)
+    while (1)
     {
-        case 1:
-            chegaGrupo(vetorMesas, fila, qtdLinhas, qtdColunas);
-            break;
-        case 2:
-            
-            break;
-        case 3:
-            
-            break;
-        case 4:
-
-            break;
-        case 5:
-            
-            break;
-        case 6:
-
-            break;
-        case 7:
-
-            break;
-        case 8:
-            imprimeMesasLivres(vetorMesas, qtdLinhas, qtdColunas);
-            break;
-        case 9:
-
-            break;
-        default:
-            break;
+        int opcao;
+        printf ("1) Chegar grupo\n2) Liberar mesa\n3) Sair da fila\n4) Imprimir pratos\n5) Imprimir fila\n6) Repor pratos\n7) Imprimir todas mesas\n8) Imprimir uma mesa\n9) Sair\n");
+        printf ("Digite a opcao desejada: ");
+        scanf ("%d", &opcao);
+        switch (opcao)
+        {
+            case 1:
+                listaGrupos = addGrupo (listaGrupos, vetorMesas, linhas, colunas, filaEspera, *pilhaPratos);
+                break;
+            case 2:
+                listaGrupos = liberarMesa(listaGrupos, vetorMesas, linhas, colunas, filaEspera, *pilhaPratos);
+                break;
+            case 3:
+                filaEspera = sairDaFila(filaEspera, listaGrupos);
+                break;
+            case 4:
+                contaPratos(*pilhaPratos);
+                break;
+            case 5:
+                filaImprime(filaEspera);
+                break;
+            case 6:
+                reporPratos (*pilhaPratos);
+                break;
+            case 7:
+                imprimeMesasTodas (vetorMesas, linhas, colunas);
+                break;
+            case 8:
+                imprimeMesaEspecifica (vetorMesas, linhas, colunas);
+                break;
+            case 9:
+                exit (1);
+        }
     }
 }
 
-
-int perguntaLinhasColunas(int *qtdLinhas, int *qtdColunas)
-{
-
-    printf ("Informe linhas: ");
-    scanf ("%d", qtdLinhas);
-    printf ("Informe colunas: ");
-    scanf ("%d", qtdColunas);
-
-    return *qtdLinhas * *qtdColunas;
-}   
-
-
-
 int main ()
 {
-    int qtdMesas, qtdLinhas, qtdColunas, index;
-    
-    Mesa *vetorMesas;
-    
-    qtdMesas = perguntaLinhasColunas(&qtdLinhas, &qtdColunas);
+    /* vetor de mesas */
+    Mesa *vetorMesas = NULL;
 
-    vetorMesas = alocaVetor(qtdMesas);
-    setaMesasIniciais(vetorMesas, qtdLinhas, qtdColunas);
+    /* lista que guarda os grupos */
+    Grupo *listaGrupos = NULL;
 
-    Grupo *fila = NULL;
-    do
-    {
-        menu();
-        scanf("%d", &index);
-        leOpcaoMenu(index, vetorMesas, qtdLinhas, qtdColunas, fila);
-        
-    } while(1);
-    
-    
-    
+    /* pilha que guarda pratos */
+    Pilha *pilhaPratos = initPilha ();
+
+    /* fila de espera */
+    Fila *filaEspera = filaInicializa();
+
+    /* perguntar ao usuario quantas linhas e colunas de mesas existem */
+    int linhas, colunas;
+    printf ("Informe o numero de linhas: ");
+    scanf ("%d", &linhas);
+    printf ("Informe o numero de colunas: ");
+    scanf ("%d", &colunas);
+
+    /* preencher fila de pratos*/
+    pilhaPratos = pratoInicializa(pilhaPratos, linhas, colunas);
+
+    /* alocar dinamicamente as mesas */
+    vetorMesas = alocaMesas (linhas, colunas, pilhaPratos);
+
+    /* menu */
+    menu (listaGrupos, vetorMesas, linhas, colunas, filaEspera, &pilhaPratos);
 }
