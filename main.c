@@ -45,6 +45,21 @@ void menu (Grupo *listaGrupos, Mesa *vetorMesas, int linhas, int colunas, Fila *
     }
 }
 
+void liberaPrograma (Grupo *listaGrupos, Mesa *vetorMesas, Pilha *pilhaPratos, Fila *filaEspera)
+{
+    Grupo *p;
+    for (p = listaGrupos; p != NULL; p = p->prox)
+    {
+        Grupo *next = p->prox;
+        free (p);
+        p = next;
+    }
+
+    free (pilhaPratos);
+    free (vetorMesas);
+    free (filaEspera);
+}
+
 int main ()
 {
     /* vetor de mesas */
@@ -74,4 +89,6 @@ int main ()
 
     /* menu */
     menu (listaGrupos, vetorMesas, linhas, colunas, filaEspera, &pilhaPratos);
+
+    liberaPrograma (listaGrupos, vetorMesas, pilhaPratos, filaEspera);
 }

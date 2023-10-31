@@ -106,7 +106,7 @@ void imprimeMesaEspecifica (Mesa *vetor, int linhas, int colunas)
 
 void imprimeMesasLivres (Mesa *vetor, int linhas, int colunas)
 {   
-    printf("\nImprimindo Mesas Livres...\n");
+    printf("\nImprimindo mesas livres...\n");
     if(!existeMesaLivre(vetor, linhas, colunas)){
         printf("Nenhuma mesa livre\n");
         return;

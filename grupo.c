@@ -33,11 +33,11 @@ void filaImprime(Fila* f)
     int posicao = 1, totalNaFila = 0;
 
     if(f->ini == NULL){
-        printf("\nFila de Espera vazia\n");
+        printf("\nFila de espera vazia\n");
         return;
     }
 
-    printf("\nImprimindo Fila de Espera...\n");
+    printf("\nImprimindo fila de espera...\n");
     for(q = f->ini; q != NULL; q = q->prox){
         printf("Grupo ID: %d\tPosicao: %d\tQtd pessoas: %d\n", q->identificacao, posicao, q->quantidadeMembros);
         posicao++;
@@ -54,12 +54,12 @@ Fila *sairDaFila(Fila* f, Grupo *listaGrupos)
 
     if(f->ini == NULL)
     {
-        printf("\nFila de Espera vazia\n");
+        printf("\nFila de espera vazia\n");
         return f;
     }
     filaImprime(f);
 
-    printf ("Digite o Id do grupo que deseja sair da fila: \n");
+    printf ("Digite o id do grupo que deseja sair da fila: \n");
     scanf ("%d", &idLocal); 
 
     while(p != NULL && p->identificacao != idLocal){
@@ -95,7 +95,7 @@ Fila *sairDaFila(Fila* f, Grupo *listaGrupos)
         ultimoGrupo->prox = NULL;
     }
 
-    printf ("O grupo com Id %d saiu da fila.\n", p->identificacao);
+    printf ("O grupo com id %d saiu da fila.\n", p->identificacao);
     free(p);
     
     return f;
@@ -248,7 +248,7 @@ Grupo *addGrupo (Grupo *inicioLista, Mesa *vetor, int linhas, int colunas, Fila 
 void imprimeGrupos (Grupo *inicioLista)
 {
     Grupo *p;
-    printf("\nImprimindo Grupos...\n");
+    printf("\nImprimindo grupos...\n");
     for (p = inicioLista; p != NULL; p = p->prox)
     {
         printf ("Quantidade de membros: %d\t", p->quantidadeMembros);
