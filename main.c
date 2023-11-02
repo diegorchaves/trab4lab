@@ -40,7 +40,7 @@ void menu (Grupo *listaGrupos, Mesa *vetorMesas, int linhas, int colunas, Fila *
                 imprimeMesaEspecifica (vetorMesas, linhas, colunas);
                 break;
             case 9:
-                exit (1);
+                return;
         }
     }
 }
